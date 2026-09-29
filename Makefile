@@ -3,7 +3,7 @@ SEEDS ?= 30
 NOTEBOOK_OUTPUT_DIR ?= /tmp/tech-challenge-notebooks
 export MLFLOW_TRACKING_URI ?= sqlite:///$(CURDIR)/mlflow.db
 
-.PHONY: install data data-uci data-kaggle validate prepare train-policies evaluate quality-gate golden-set consolidate-policy approve-policy verify-mlflow mlflow-ui register-model data_pipeline eda notebooks eda-summary recommend api docker-build infra-fmt infra-validate infra-plan test lint clean
+.PHONY: install data data-uci data-kaggle validate prepare train-policies evaluate quality-gate golden-set consolidate-policy approve-policy verify-mlflow mlflow-ui slides register-model data_pipeline eda notebooks eda-summary recommend api docker-build infra-fmt infra-validate infra-plan test lint clean
 .NOTPARALLEL: notebooks
 
 install:
@@ -47,6 +47,11 @@ verify-mlflow:
 
 mlflow-ui:
 	$(PYTHON) -m mlflow ui --backend-store-uri "$(MLFLOW_TRACKING_URI)" --host 127.0.0.1 --port 5000
+
+slides:
+	$(PYTHON) presentation/build.py
+	@echo "Slides em http://127.0.0.1:8765/pitch.html (S abre as notas do apresentador)"
+	$(PYTHON) -m http.server 8765 --bind 127.0.0.1 --directory presentation
 
 register-model:
 	$(PYTHON) scripts/register_model.py
