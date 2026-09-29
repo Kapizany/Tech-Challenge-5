@@ -1,0 +1,55 @@
+{
+  "split": {
+    "train": {
+      "rows": 24705,
+      "first_index": "0",
+      "last_index": "24711"
+    },
+    "validation": {
+      "rows": 8235,
+      "first_index": "24712",
+      "last_index": "32949"
+    },
+    "test": {
+      "rows": 8236,
+      "first_index": "32950",
+      "last_index": "41187"
+    }
+  },
+  "context_columns": [
+    "age",
+    "job",
+    "marital",
+    "education",
+    "default",
+    "housing",
+    "loan",
+    "month",
+    "day_of_week",
+    "contacts_before",
+    "never_contacted",
+    "pdays_contacted",
+    "previous",
+    "poutcome",
+    "emp.var.rate",
+    "cons.price.idx",
+    "cons.conf.idx",
+    "euribor3m",
+    "nr.employed"
+  ],
+  "excluded_columns": [
+    "campaign",
+    "contact",
+    "duration",
+    "pdays",
+    "y"
+  ],
+  "include_proxies": true,
+  "dropped_duplicates": 12,
+  "replaced_columns": {
+    "campaign": "contacts_before = campaign - 1, porque campaign inclui o contato atual",
+    "pdays": "never_contacted e pdays_contacted; 999 ou valor negativo é sentinela"
+  },
+  "feature_count": 57,
+  "fit_period": "train only"
+}

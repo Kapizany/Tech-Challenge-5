@@ -1,0 +1,16 @@
+.git
+.venv
+.pytest_cache
+.ruff_cache
+__pycache__
+*.py[cod]
+data/
+artifacts/
+mlruns/
+mlflow.db
+notebooks/
+tests/
+infra/
+.env
+.env.*
+!.env.example

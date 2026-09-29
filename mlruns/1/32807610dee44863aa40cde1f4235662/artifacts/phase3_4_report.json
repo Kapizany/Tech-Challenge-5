@@ -1,0 +1,75 @@
+{
+  "train_action_statistics": [
+    {
+      "action": "cellular",
+      "successes": 656,
+      "observations": 11254,
+      "conversion_rate": 0.0582903856406611,
+      "ci_low": 0.05411050750501174,
+      "ci_high": 0.0627717197240514
+    },
+    {
+      "action": "telephone",
+      "successes": 532,
+      "observations": 13458,
+      "conversion_rate": 0.0395303908455937,
+      "ci_low": 0.036367541604131116,
+      "ci_high": 0.042956048119283836
+    }
+  ],
+  "best_train_action": "cellular",
+  "reward_model": {
+    "actions": [
+      "cellular",
+      "telephone"
+    ],
+    "validation_observed_metrics": {
+      "brier_score": 0.11728651437162448,
+      "log_loss": 0.39120533578005795,
+      "pr_auc": 0.12448107656251006,
+      "roc_auc": 0.5590967013664382
+    },
+    "test_observed_metrics": {
+      "brier_score": 0.234443391262143,
+      "log_loss": 0.6661791007258427,
+      "pr_auc": 0.2683962222677809,
+      "roc_auc": 0.376403172269314
+    },
+    "model_type": "calibrated logistic regression per action"
+  },
+  "policies": {
+    "thompson_sampling": {
+      "prior": [
+        1.0,
+        1.0
+      ],
+      "min_segment_observations": 100
+    },
+    "epsilon_greedy": {
+      "epsilon": 0.1
+    },
+    "guardrails": {
+      "min_action_share": 0.05,
+      "max_action_share": 0.95
+    }
+  },
+  "example_decisions": {
+    "fixed_best": {
+      "action": "cellular",
+      "action_probability": 1.0
+    },
+    "segment_baseline": {
+      "action": "cellular",
+      "action_probability": 1.0
+    },
+    "thompson_sampling": {
+      "action": "cellular",
+      "action_probability": 0.9523809523809523
+    },
+    "epsilon_greedy": {
+      "action": "telephone",
+      "action_probability": 0.9500000000000001
+    }
+  },
+  "evaluation_note": "As métricas do reward model usam somente a ação observada; ganho de política exige replay/OPE ou simulação."
+}

@@ -1,0 +1,179 @@
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Protected target environment
+        required: true
+        type: environment
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      TARGET_ENV: ${{ inputs.environment }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ vars.GCP_REGION || 'southamerica-east1' }}
+      TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+      DATA_BUCKET: ${{ vars.DATA_BUCKET }}
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      MLFLOW_DISABLE_AGENT_HINT: "1"
+      MLFLOW_TRACKING_URI: sqlite:///${{ github.workspace }}/mlflow.db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Validate target
+        run: |
+          case "${TARGET_ENV}" in dev|staging|prod) ;; *) exit 1 ;; esac
+          test -n "${GCP_PROJECT_ID}" && test -n "${TF_STATE_BUCKET}" && test -n "${DATA_BUCKET}"
+      - name: Install project
+        run: python -m pip install -e '.[dev]'
+      - name: Train and evaluate candidate
+        run: |
+          make data
+          make validate
+          make prepare
+          make train-policies
+          make evaluate
+          make golden-set
+          make verify-mlflow
+      - name: Retain evaluation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-${{ inputs.environment }}-${{ github.sha }}
+          path: |
+            mlflow.db
+            mlruns/
+            artifacts/phase3_4_report.json
+            artifacts/phase5_evaluation_report.json
+            artifacts/phase5_simulation_summary.csv
+            artifacts/phase5_ope_summary.csv
+            artifacts/golden_set.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Enforce quality gate
+        run: make quality-gate
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Version data, model and evaluation
+        run: |
+          gcloud storage cp data/raw/bank-additional-full.csv "gs://${DATA_BUCKET}/raw/${GITHUB_SHA}/bank-additional-full.csv"
+          gcloud storage cp artifacts/channel_reward_model.joblib "gs://${DATA_BUCKET}/models/${GITHUB_SHA}/channel_reward_model.joblib"
+          gcloud storage cp artifacts/phase5_evaluation_report.json "gs://${DATA_BUCKET}/evaluations/${GITHUB_SHA}/phase5_evaluation_report.json"
+      - name: Build and push immutable image
+        id: image
+        run: |
+          REPOSITORY="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/adaptive-offers-${TARGET_ENV}"
+          TAG="${REPOSITORY}/api:${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+          docker build -t "${TAG}" .
+          docker push "${TAG}"
+          DIGEST="$(gcloud artifacts docker images describe "${TAG}" --format='value(image_summary.digest)')"
+          test -n "${DIGEST}"
+          echo "container_image=${REPOSITORY}/api@${DIGEST}" >> "${GITHUB_OUTPUT}"
+          echo "model_uri=gs://${DATA_BUCKET}/models/${GITHUB_SHA}/channel_reward_model.joblib" >> "${GITHUB_OUTPUT}"
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - name: Initialize Terraform
+        run: terraform -chdir=infra/terraform init -input=false -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="prefix=adaptive-offers/${TARGET_ENV}"
+      - name: Apply infrastructure and scheduled job
+        env:
+          TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+          TF_VAR_region: ${{ vars.GCP_REGION || 'southamerica-east1' }}
+          TF_VAR_environment: ${{ inputs.environment }}
+          TF_VAR_github_owner: ${{ github.repository_owner }}
+          TF_VAR_github_repository: ${{ github.event.repository.name }}
+          TF_VAR_data_bucket: ${{ vars.DATA_BUCKET }}
+          TF_VAR_state_bucket_name: ${{ vars.TF_STATE_BUCKET }}
+          TF_VAR_container_image: ${{ steps.image.outputs.container_image }}
+          TF_VAR_model_uri: ${{ steps.image.outputs.model_uri }}
+          TF_VAR_git_sha: ${{ github.sha }}
+          TF_VAR_consolidation_paused: "true"
+        run: terraform -chdir=infra/terraform apply -auto-approve -input=false -lock-timeout=5m
+      - name: Deploy tagged revision without traffic
+        id: revision
+        env:
+          CONTAINER_IMAGE: ${{ steps.image.outputs.container_image }}
+        run: |
+          SERVICE="adaptive-offers-${TARGET_ENV}"
+          OLD="$(gcloud run services describe "${SERVICE}" --region "${GCP_REGION}" --format=json | python -c 'import json,sys; traffic=json.load(sys.stdin)["status"].get("traffic", []); active=[item for item in traffic if item.get("percent", 0) > 0]; winner=max(active, key=lambda item: item["percent"]) if active else {}; print(winner.get("revisionName") or winner.get("revision") or "")')"
+          echo "old=${OLD}" >> "${GITHUB_OUTPUT}"
+          gcloud run deploy "${SERVICE}" --region "${GCP_REGION}" --image "${CONTAINER_IMAGE}" --no-traffic --tag canary --quiet
+          NEW="$(gcloud run services describe "${SERVICE}" --region "${GCP_REGION}" --format='value(status.latestCreatedRevisionName)')"
+          test -n "${NEW}"
+          echo "new=${NEW}" >> "${GITHUB_OUTPUT}"
+      - name: Smoke test tagged revision
+        run: |
+          SERVICE="adaptive-offers-${TARGET_ENV}"
+          SERVICE_URL="$(terraform -chdir=infra/terraform output -raw api_url)"
+          CANARY_URL="$(gcloud run services describe "${SERVICE}" --region "${GCP_REGION}" --format=json | python -c 'import json,sys; print(next(item.get("uri") or item.get("url") for item in json.load(sys.stdin)["status"]["traffic"] if item.get("tag") == "canary"))')"
+          TOKEN="$(gcloud auth print-identity-token --audiences="${SERVICE_URL}")"
+          curl --fail --silent --show-error -H "Authorization: Bearer ${TOKEN}" "${CANARY_URL}/health" | python -c 'import json,sys; assert json.load(sys.stdin)["status"] == "ok"'
+      - name: Canary and promote healthy revision
+        env:
+          CANARY_OBSERVATION_SECONDS: ${{ vars.CANARY_OBSERVATION_SECONDS || '300' }}
+        run: |
+          SERVICE="adaptive-offers-${TARGET_ENV}"
+          NEW="${{ steps.revision.outputs.new }}"
+          OLD="${{ steps.revision.outputs.old }}"
+          if [ -n "${OLD}" ] && [ "${OLD}" != "${NEW}" ]; then
+            gcloud run services update-traffic "${SERVICE}" --region "${GCP_REGION}" --to-revisions "${NEW}=10,${OLD}=90"
+            SERVICE_URL="$(terraform -chdir=infra/terraform output -raw api_url)"
+            CANARY_URL="$(gcloud run services describe "${SERVICE}" --region "${GCP_REGION}" --format=json | python -c 'import json,sys; print(next(item.get("uri") or item.get("url") for item in json.load(sys.stdin)["status"]["traffic"] if item.get("tag") == "canary"))')"
+            STARTED="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            DEADLINE=$(( $(date +%s) + CANARY_OBSERVATION_SECONDS ))
+            while [ "$(date +%s)" -lt "${DEADLINE}" ]; do
+              TOKEN="$(gcloud auth print-identity-token --audiences="${SERVICE_URL}")"
+              curl --fail --silent --show-error -H "Authorization: Bearer ${TOKEN}" "${CANARY_URL}/health" > /dev/null
+              sleep 30
+            done
+            ERRORS="$(gcloud logging read "resource.type=\"cloud_run_revision\" AND resource.labels.revision_name=\"${NEW}\" AND httpRequest.status>=500 AND timestamp>=\"${STARTED}\"" --project "${GCP_PROJECT_ID}" --limit 50 --format='value(insertId)' | wc -l)"
+            echo "5xx na revisão canário durante a observação: ${ERRORS}"
+            test "${ERRORS}" -eq 0
+          fi
+          gcloud run services update-traffic "${SERVICE}" --region "${GCP_REGION}" --to-revisions "${NEW}=100"
+      - name: Activate weekly schedule after healthy rollout
+        env:
+          TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+          TF_VAR_region: ${{ vars.GCP_REGION || 'southamerica-east1' }}
+          TF_VAR_environment: ${{ inputs.environment }}
+          TF_VAR_github_owner: ${{ github.repository_owner }}
+          TF_VAR_github_repository: ${{ github.event.repository.name }}
+          TF_VAR_data_bucket: ${{ vars.DATA_BUCKET }}
+          TF_VAR_state_bucket_name: ${{ vars.TF_STATE_BUCKET }}
+          TF_VAR_container_image: ${{ steps.image.outputs.container_image }}
+          TF_VAR_model_uri: ${{ steps.image.outputs.model_uri }}
+          TF_VAR_git_sha: ${{ github.sha }}
+          TF_VAR_consolidation_paused: "false"
+        run: terraform -chdir=infra/terraform apply -auto-approve -input=false -lock-timeout=5m
+      - name: Roll back to previous revision
+        if: failure() && steps.revision.outputs.old != '' && steps.revision.outputs.old != steps.revision.outputs.new
+        run: |
+          gcloud run services update-traffic "adaptive-offers-${TARGET_ENV}" --region "${GCP_REGION}" --to-revisions "${{ steps.revision.outputs.old }}=100"

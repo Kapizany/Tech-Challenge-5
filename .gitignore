@@ -151,6 +151,11 @@ activemq-data/
 .env
 .envrc
 .venv
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+infra/terraform/terraform.tfvars
 env/
 venv/
 ENV/
@@ -216,3 +221,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data and generated artefacts
+
+data/interim/*
+artifacts/*
+!artifacts/.gitkeep
+ROADMAP.md
+relatorio.md
+mlflow.db
+
+# Local Kaggle credentials
+.kaggle/

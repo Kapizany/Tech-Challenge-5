@@ -1,0 +1,63 @@
+name: policy-approval
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Protected target environment
+        required: true
+        type: environment
+      version:
+        description: Candidate version, for example policy-20260928T090000000000Z-1234abcd
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: policy-approval-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  approve:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      TARGET_ENV: ${{ inputs.environment }}
+      CANDIDATE_VERSION: ${{ inputs.version }}
+      DATA_BUCKET: ${{ vars.DATA_BUCKET }}
+      MLFLOW_DISABLE_AGENT_HINT: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Validate inputs
+        run: |
+          case "${TARGET_ENV}" in dev|staging|prod) ;; *) exit 1 ;; esac
+          [[ "${CANDIDATE_VERSION}" =~ ^policy-[0-9]{8}T[0-9]{12}Z-[0-9a-f]{8}$ ]]
+          test -n "${DATA_BUCKET}"
+      - name: Install project
+        run: python -m pip install -e '.[cloud]'
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Load candidate and matching evaluation
+        run: |
+          gcloud storage cp "gs://${DATA_BUCKET}/policy_versions/${CANDIDATE_VERSION}/manifest.json" "${RUNNER_TEMP}/candidate-manifest.json"
+          MODEL_SHA="$(python -c 'import json,os,re; from pathlib import Path; value=json.loads((Path(os.environ["RUNNER_TEMP"])/"candidate-manifest.json").read_text())["git_sha"]; assert re.fullmatch(r"[0-9a-f]{40}", value); print(value)')"
+          gcloud storage cp "gs://${DATA_BUCKET}/evaluations/${MODEL_SHA}/phase5_evaluation_report.json" "${RUNNER_TEMP}/evaluation-report.json"
+      - name: Approve posterior after gate
+        run: >-
+          python scripts/approve_policy.py
+          --version "${CANDIDATE_VERSION}"
+          --approved-by "${GITHUB_ACTOR}"
+          --report "${RUNNER_TEMP}/evaluation-report.json"
+          --policy-uri "gs://${DATA_BUCKET}/policy_versions"

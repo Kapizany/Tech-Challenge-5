@@ -1,0 +1,9 @@
+project_id        = "replace-with-your-gcp-project"
+region            = "southamerica-east1"
+environment       = "dev"
+github_owner      = "replace-with-github-owner"
+github_repository = "replace-with-repository-name"
+state_bucket_name = "replace-with-bootstrap-state-bucket"
+container_image   = "us-docker.pkg.dev/cloudrun/container/hello"
+model_uri         = "gs://replace-after-bootstrap/models/bootstrap/channel_reward_model.joblib"
+consolidation_paused = true # bootstrap; o deploy aprovado ativa o agendamento

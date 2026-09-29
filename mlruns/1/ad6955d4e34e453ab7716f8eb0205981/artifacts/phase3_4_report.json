@@ -1,0 +1,78 @@
+{
+  "train_action_statistics": [
+    {
+      "action": "cellular",
+      "successes": 656,
+      "observations": 11249,
+      "conversion_rate": 0.05831629478175838,
+      "ci_low": 0.054134610054589916,
+      "ci_high": 0.06279955171304752
+    },
+    {
+      "action": "telephone",
+      "successes": 532,
+      "observations": 13456,
+      "conversion_rate": 0.03953626634958383,
+      "ci_low": 0.03637295552152556,
+      "ci_high": 0.04296242090667848
+    }
+  ],
+  "best_train_action": "cellular",
+  "reward_model": {
+    "actions": [
+      "cellular",
+      "telephone"
+    ],
+    "validation_observed_metrics": {
+      "brier_score": 0.2709247807207021,
+      "log_loss": 0.7116176107435283,
+      "pr_auc": 0.11217163470288316,
+      "roc_auc": 0.5383277063853132
+    },
+    "test_observed_metrics": {
+      "brier_score": 0.3431229230641178,
+      "log_loss": 0.8881821299334025,
+      "pr_auc": 0.27947357408390383,
+      "roc_auc": 0.41125211662087585
+    },
+    "model_type": "calibrated logistic regression with shared context and action feature"
+  },
+  "policies": {
+    "thompson_sampling": {
+      "prior": [
+        1.0,
+        1.0
+      ],
+      "model_strength": 40.0,
+      "context": "recompensa esperada do modelo calibrado por canal",
+      "version": "thompson-sampling-contextual-v1"
+    },
+    "epsilon_greedy": {
+      "epsilon": 0.1,
+      "version": "epsilon-greedy-contextual-v1"
+    },
+    "guardrails": {
+      "min_action_share": 0.05,
+      "max_action_share": 0.95
+    }
+  },
+  "example_decisions": {
+    "fixed_best": {
+      "action": "cellular",
+      "action_probability": 1.0
+    },
+    "segment_baseline": {
+      "action": "cellular",
+      "action_probability": 1.0
+    },
+    "thompson_sampling": {
+      "action": "telephone",
+      "action_probability": 0.5030862816237401
+    },
+    "epsilon_greedy": {
+      "action": "telephone",
+      "action_probability": 0.9500000000000001
+    }
+  },
+  "evaluation_note": "As métricas do reward model usam somente a ação observada; ganho de política exige replay/OPE ou simulação."
+}

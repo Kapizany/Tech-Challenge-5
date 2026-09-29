@@ -1,0 +1,29 @@
+{
+  "dataset": "bank-additional-full.csv",
+  "kaggle": "henriqueyamahata/bank-marketing",
+  "source": "https://archive.ics.uci.edu/dataset/222/bank+marketing",
+  "delimiter": ";",
+  "expected_rows": 41188,
+  "expected_columns": 21,
+  "target": "y",
+  "action": "contact",
+  "known_leakage": [
+    {
+      "column": "duration",
+      "reason": "duração só é conhecida após o contato e está fortemente associada ao resultado"
+    }
+  ],
+  "categorical_values": {
+    "job": ["admin.", "blue-collar", "entrepreneur", "housemaid", "management", "retired", "self-employed", "services", "student", "technician", "unemployed", "unknown"],
+    "marital": ["divorced", "married", "single", "unknown"],
+    "education": ["basic.4y", "basic.6y", "basic.9y", "high.school", "illiterate", "professional.course", "university.degree", "unknown"],
+    "default": ["yes", "no", "unknown"],
+    "housing": ["yes", "no", "unknown"],
+    "loan": ["yes", "no", "unknown"],
+    "contact": ["cellular", "telephone"],
+    "day_of_week": ["mon", "tue", "wed", "thu", "fri"],
+    "month": ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],
+    "poutcome": ["failure", "nonexistent", "success"],
+    "y": ["yes", "no"]
+  }
+}

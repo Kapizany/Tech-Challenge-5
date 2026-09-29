@@ -1,0 +1,12 @@
+{
+  "trigger": "interval",
+  "interval_days": 7,
+  "min_new_rewards": 50,
+  "actions": ["cellular", "telephone"],
+  "prior_alpha": 1.0,
+  "prior_beta": 1.0,
+  "model_strength": 40.0,
+  "drift_reward_drop": 0.05,
+  "drift_action_share": 0.2,
+  "promote": false
+}

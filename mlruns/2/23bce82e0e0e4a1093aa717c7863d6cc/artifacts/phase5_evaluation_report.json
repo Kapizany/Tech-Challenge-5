@@ -1,0 +1,337 @@
+{
+  "simulation": [
+    {
+      "policy": "thompson_sampling",
+      "conversion_rate": 0.5108750202363608,
+      "conversion_ci_low": 0.5093729763639306,
+      "conversion_ci_high": 0.5125101181803464,
+      "expected_conversion": 0.5104035552063733,
+      "baseline_conversion_rate": 0.267172575683989,
+      "uplift_absolute": 0.24370244455237172,
+      "uplift_ci_low": 0.24167476121094383,
+      "uplift_ci_high": 0.24606240893637685,
+      "uplift_relative": 0.9121536667020133,
+      "cumulative_regret": 85.13624765323668,
+      "regret_ci_low": 82.21311101218693,
+      "regret_ci_high": 87.56947732691808,
+      "seeds": 30
+    },
+    {
+      "policy": "epsilon_greedy",
+      "conversion_rate": 0.49433381900599,
+      "conversion_ci_low": 0.49272614133074305,
+      "conversion_ci_high": 0.4959858143111543,
+      "expected_conversion": 0.508032068814863,
+      "baseline_conversion_rate": 0.267172575683989,
+      "uplift_absolute": 0.22716124332200094,
+      "uplift_ci_low": 0.22496347336894937,
+      "uplift_ci_high": 0.22958171442447792,
+      "uplift_relative": 0.8502416190750305,
+      "cumulative_regret": 104.66780957371361,
+      "regret_ci_low": 101.89429970868414,
+      "regret_ci_high": 107.32759630898666,
+      "seeds": 30
+    },
+    {
+      "policy": "random",
+      "conversion_rate": 0.3933098591549296,
+      "conversion_ci_low": 0.3916180994010038,
+      "conversion_ci_high": 0.394993220819168,
+      "expected_conversion": 0.39381821502621983,
+      "baseline_conversion_rate": 0.267172575683989,
+      "uplift_absolute": 0.12613728347094058,
+      "uplift_ci_low": 0.12447759834871298,
+      "uplift_ci_high": 0.1277239153310669,
+      "uplift_relative": 0.47211912805053546,
+      "cumulative_regret": 1045.3331093769762,
+      "regret_ci_low": 1041.177672887046,
+      "regret_ci_high": 1049.0558935423232,
+      "seeds": 30
+    },
+    {
+      "policy": "fixed_best",
+      "conversion_rate": 0.267172575683989,
+      "conversion_ci_low": 0.2657155577141007,
+      "conversion_ci_high": 0.2686176542010684,
+      "expected_conversion": 0.266857865679018,
+      "baseline_conversion_rate": 0.267172575683989,
+      "uplift_absolute": 0.0,
+      "uplift_ci_low": 0.0,
+      "uplift_ci_high": 0.0,
+      "uplift_relative": 0.0,
+      "cumulative_regret": 2090.978546600529,
+      "regret_ci_low": 2090.978546600529,
+      "regret_ci_high": 2090.978546600529,
+      "seeds": 30
+    },
+    {
+      "policy": "segment_baseline",
+      "conversion_rate": 0.267172575683989,
+      "conversion_ci_low": 0.2657155577141007,
+      "conversion_ci_high": 0.2686176542010684,
+      "expected_conversion": 0.266857865679018,
+      "baseline_conversion_rate": 0.267172575683989,
+      "uplift_absolute": 0.0,
+      "uplift_ci_low": 0.0,
+      "uplift_ci_high": 0.0,
+      "uplift_relative": 0.0,
+      "cumulative_regret": 2090.978546600529,
+      "regret_ci_low": 2090.978546600529,
+      "regret_ci_high": 2090.978546600529,
+      "seeds": 30
+    }
+  ],
+  "ope": [
+    {
+      "ips": 15.33522482459232,
+      "snips": 0.5046455439968913,
+      "doubly_robust": 9.123914514990714,
+      "effective_sample_size": 2713.3855133870757,
+      "ips_ci_low": 11.362633100772133,
+      "ips_ci_high": 19.865479415597285,
+      "snips_ci_low": 0.4690629174850833,
+      "snips_ci_high": 0.5312555161119716,
+      "doubly_robust_ci_low": 6.699232765806932,
+      "doubly_robust_ci_high": 11.67902395292614,
+      "policy": "fixed_best",
+      "rows": 8236,
+      "propensity_min": 0.0,
+      "propensity_p05": 2.294458681162405e-07,
+      "clip_rate": 0.30998057309373483,
+      "target_probability_mean": 0.879553181155901,
+      "ips_uplift": 0.0,
+      "snips_uplift": 0.0,
+      "doubly_robust_uplift": 0.0
+    },
+    {
+      "ips": 7.896661162582309,
+      "snips": 0.44854943005047815,
+      "doubly_robust": 3.8696475297395585,
+      "effective_sample_size": 3117.1953651370136,
+      "ips_ci_low": 5.904827463761079,
+      "ips_ci_high": 10.11551919048611,
+      "snips_ci_low": 0.4050213905441535,
+      "snips_ci_high": 0.48059581550725744,
+      "doubly_robust_ci_low": 2.374131606348378,
+      "doubly_robust_ci_high": 5.361324182734423,
+      "policy": "random",
+      "rows": 8236,
+      "propensity_min": 0.0,
+      "propensity_p05": 2.294458681162405e-07,
+      "clip_rate": 0.30998057309373483,
+      "target_probability_mean": 0.5,
+      "ips_uplift": -7.438563662010011,
+      "snips_uplift": -0.05609611394641317,
+      "doubly_robust_uplift": -5.254266985251156
+    },
+    {
+      "ips": 15.33522482459232,
+      "snips": 0.5046455439968913,
+      "doubly_robust": 9.123914514990714,
+      "effective_sample_size": 2713.3855133870757,
+      "ips_ci_low": 11.362633100772133,
+      "ips_ci_high": 19.865479415597285,
+      "snips_ci_low": 0.4690629174850833,
+      "snips_ci_high": 0.5312555161119716,
+      "doubly_robust_ci_low": 6.699232765806932,
+      "doubly_robust_ci_high": 11.67902395292614,
+      "policy": "segment_baseline",
+      "rows": 8236,
+      "propensity_min": 0.0,
+      "propensity_p05": 2.294458681162405e-07,
+      "clip_rate": 0.30998057309373483,
+      "target_probability_mean": 0.879553181155901,
+      "ips_uplift": 0.0,
+      "snips_uplift": 0.0,
+      "doubly_robust_uplift": 0.0
+    },
+    {
+      "ips": 1.1939016165415286,
+      "snips": 0.19589859630620432,
+      "doubly_robust": -0.8640480044090116,
+      "effective_sample_size": 707.4292403975392,
+      "ips_ci_low": 0.9248096599273249,
+      "ips_ci_high": 1.450187924843669,
+      "snips_ci_low": 0.14318451137052748,
+      "snips_ci_high": 0.24721941408945533,
+      "doubly_robust_ci_low": -1.5591531753702752,
+      "doubly_robust_ci_high": -0.32558154844562376,
+      "policy": "epsilon_greedy",
+      "rows": 8236,
+      "propensity_min": 0.0,
+      "propensity_p05": 2.294458681162405e-07,
+      "clip_rate": 0.30998057309373483,
+      "target_probability_mean": 0.16364740165128702,
+      "ips_uplift": -14.14132320805079,
+      "snips_uplift": -0.308746947690687,
+      "doubly_robust_uplift": -9.987962519399726
+    },
+    {
+      "ips": 7.073742591951726,
+      "snips": 0.43160047697238757,
+      "doubly_robust": 3.1250917929980844,
+      "effective_sample_size": 3090.6881388627257,
+      "ips_ci_low": 5.29397008677241,
+      "ips_ci_high": 9.024389397817165,
+      "snips_ci_low": 0.3863056189399249,
+      "snips_ci_high": 0.4652826011700231,
+      "doubly_robust_ci_low": 1.782432555353299,
+      "doubly_robust_ci_high": 4.422519558859954,
+      "policy": "thompson_sampling",
+      "rows": 8236,
+      "propensity_min": 0.0,
+      "propensity_p05": 2.294458681162405e-07,
+      "clip_rate": 0.30998057309373483,
+      "target_probability_mean": 0.4723487537760169,
+      "ips_uplift": -8.261482232640594,
+      "snips_uplift": -0.07304506702450375,
+      "doubly_robust_uplift": -5.99882272199263
+    }
+  ],
+  "context_disagreement_rate": 0.9939290917921321,
+  "baseline_action": "cellular",
+  "confounding": {
+    "marginal_channel": [
+      {
+        "contact": "cellular",
+        "conversions": 3852,
+        "contacts": 26135,
+        "conversion_rate": 0.14738855940309928
+      },
+      {
+        "contact": "telephone",
+        "conversions": 787,
+        "contacts": 15041,
+        "conversion_rate": 0.05232364869357091
+      }
+    ],
+    "channel_by_period": [
+      {
+        "periodo": "P5",
+        "contact": "cellular",
+        "conversions": 2331,
+        "contacts": 7243,
+        "conversion_rate": 0.32182797183487505
+      },
+      {
+        "periodo": "P5",
+        "contact": "telephone",
+        "conversions": 208,
+        "contacts": 992,
+        "conversion_rate": 0.20967741935483872
+      },
+      {
+        "periodo": "P3",
+        "contact": "telephone",
+        "conversions": 88,
+        "contacts": 670,
+        "conversion_rate": 0.13134328358208955
+      },
+      {
+        "periodo": "P4",
+        "contact": "cellular",
+        "conversions": 865,
+        "contacts": 7642,
+        "conversion_rate": 0.11319026432870977
+      },
+      {
+        "periodo": "P4",
+        "contact": "telephone",
+        "conversions": 47,
+        "contacts": 593,
+        "conversion_rate": 0.07925801011804384
+      },
+      {
+        "periodo": "P2",
+        "contact": "cellular",
+        "conversions": 262,
+        "contacts": 3685,
+        "conversion_rate": 0.07109905020352782
+      },
+      {
+        "periodo": "P3",
+        "contact": "cellular",
+        "conversions": 394,
+        "contacts": 7565,
+        "conversion_rate": 0.05208195637805684
+      },
+      {
+        "periodo": "P2",
+        "contact": "telephone",
+        "conversions": 185,
+        "contacts": 4550,
+        "conversion_rate": 0.04065934065934066
+      },
+      {
+        "periodo": "P1",
+        "contact": "telephone",
+        "conversions": 259,
+        "contacts": 8236,
+        "conversion_rate": 0.03144730451675571
+      }
+    ],
+    "channel_by_euribor": [
+      {
+        "euribor_bin": "(0.633, 1.344]",
+        "contact": "cellular",
+        "conversions": 2465,
+        "contacts": 9430,
+        "conversion_rate": 0.2613997879109226
+      },
+      {
+        "euribor_bin": "(0.633, 1.344]",
+        "contact": "telephone",
+        "conversions": 210,
+        "contacts": 1110,
+        "conversion_rate": 0.1891891891891892
+      },
+      {
+        "euribor_bin": "(1.344, 4.857]",
+        "contact": "cellular",
+        "conversions": 750,
+        "contacts": 5986,
+        "conversion_rate": 0.12529234881389908
+      },
+      {
+        "euribor_bin": "(4.857, 4.961]",
+        "contact": "cellular",
+        "conversions": 165,
+        "contacts": 2349,
+        "conversion_rate": 0.070242656449553
+      },
+      {
+        "euribor_bin": "(4.961, 5.045]",
+        "contact": "cellular",
+        "conversions": 472,
+        "contacts": 8370,
+        "conversion_rate": 0.056391875746714455
+      },
+      {
+        "euribor_bin": "(4.961, 5.045]",
+        "contact": "telephone",
+        "conversions": 67,
+        "contacts": 1415,
+        "conversion_rate": 0.04734982332155477
+      },
+      {
+        "euribor_bin": "(4.857, 4.961]",
+        "contact": "telephone",
+        "conversions": 310,
+        "contacts": 6993,
+        "conversion_rate": 0.04433004433004433
+      },
+      {
+        "euribor_bin": "(1.344, 4.857]",
+        "contact": "telephone",
+        "conversions": 200,
+        "contacts": 5523,
+        "conversion_rate": 0.03621220351258374
+      }
+    ]
+  },
+  "protocol": {
+    "simulation": "recompensas Bernoulli amostradas a partir do reward model ajustado no treino",
+    "ope": "IPS, SNIPS e Doubly Robust com propensão comportamental estimada e clipping",
+    "policy_gain_claim": "somente se o IC do uplift contra fixed_best ultrapassar zero e OPE tiver overlap adequado"
+  }
+}
