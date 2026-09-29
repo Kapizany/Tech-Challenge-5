@@ -51,7 +51,7 @@ mlflow-ui:
 slides:
 	$(PYTHON) presentation/build.py
 	@echo "Slides em http://127.0.0.1:8765/pitch.html (S abre as notas do apresentador)"
-	$(PYTHON) -m http.server 8765 --bind 127.0.0.1 --directory presentation
+	$(PYTHON) presentation/serve.py
 
 register-model:
 	$(PYTHON) scripts/register_model.py

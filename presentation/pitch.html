@@ -96,16 +96,15 @@
 <style>
   .reveal strong.teal { color: var(--teal); }
   .reveal strong.rose { color: var(--rose); }
-  .diagram.h-uc { min-height: 330px; }
-  .diagram.h-uc svg { max-height: 340px; }
-  .facts { margin-top: 14px; gap: 12px; }
-  .facts .card { padding: 12px 16px; font-size: 18px; line-height: 1.35; }
-  .facts .card h4 { font-size: 14px; margin-bottom: 4px; }
+  .diagram.h-uc { min-height: 440px; }
+  .diagram.h-uc svg { max-height: 450px; }
   .legend { position: absolute; bottom: 0; left: 8px; display: flex; gap: 22px; font-size: 14px; color: var(--muted); }
   .legend span::before { display: inline-block; width: 26px; margin-right: 8px; vertical-align: middle; content: ""; }
   .legend .solid::before { border-top: 2px solid var(--blue); }
   .legend .dashed::before { border-top: 2px dashed var(--blue); }
-  .legend .future::before { height: 12px; width: 20px; border: 1.5px dashed #64748b; border-radius: 3px; }
+  .steps { counter-reset: step; list-style: none; padding-left: 0 !important; }
+  .steps li { counter-increment: step; position: relative; padding-left: 44px; margin: 12px 0; }
+  .steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 999px; background: rgba(45,212,191,.15); border: 1px solid rgba(45,212,191,.5); color: var(--teal); font-weight: 700; font-size: 17px; display: flex; align-items: center; justify-content: center; }
 </style>
 
 <!-- 1. Problema -->
@@ -113,34 +112,29 @@
   <span class="time">0:00–0:25</span>
   <span class="kicker">Datathon FIAP · Tech Challenge 5</span>
   <h1>Plataforma de <span>Ofertas Adaptativas</span></h1>
-  <p class="muted" style="font-size:24px;margin:0 0 22px">Qual canal usar <strong>antes</strong> do contato: celular ou telefone?</p>
+  <p class="muted" style="font-size:24px;margin:0 0 22px">Qual canal usar <strong>antes</strong> da ligação: celular ou telefone?</p>
   <div class="grid g2" style="align-items:center">
     <div>
       <ul>
-        <li>Decidir o canal para cada cliente elegível de uma campanha de depósito a prazo</li>
-        <li>Objetivo: <strong>maximizar a conversão</strong> com o contexto disponível antes da ligação</li>
-        <li>Comparar uma <strong>política adaptativa</strong> com a regra fixa “sempre o melhor canal do treino”</li>
+        <li><strong>Regra fixa:</strong> sempre o mesmo canal para todos</li>
+        <li><strong>Política adaptativa:</strong> escolhe pelo contexto do cliente e aprende com os resultados</li>
+        <li><strong>Contextual bandit:</strong> contexto, 2 ações e recompensa 1 quando o cliente assina</li>
       </ul>
-      <div style="margin-top:18px">
-        <span class="pill teal">contextual bandit</span>
-        <span class="pill blue">2 ações</span>
-        <span class="pill amber">recompensa binária</span>
-      </div>
     </div>
     <div class="diagram h-sm" data-diagram="bandit"></div>
   </div>
   <script type="text/plain" class="mermaid-src" id="bandit">
 flowchart LR
-    X["`Contexto pré-contato
-perfil · campanha · economia`"] --> P{Política}
-    P -->|cellular| A1[Celular]
-    P -->|telephone| A2[Telefone]
-    A1 --> R["`Recompensa y
-assinou = 1`"]
+    X["`Contexto do cliente
+antes da ligação`"] --> P{Política}
+    P -->|ação| A1[Celular]
+    P -->|ação| A2[Telefone]
+    A1 --> R["`Recompensa
+1 = assinou`"]
     A2 --> R
-    R -.->|feedback| P
+    R -.->|aprende| P
   </script>
-  <aside class="notes">“O problema é escolher, antes da ligação, entre celular e telefone numa campanha de depósito a prazo. Uma regra fixa usa sempre o mesmo canal. Nossa política adaptativa usa o contexto disponível antes do contato e aprende com a conversão observada. Formulamos isso como um contextual bandit: contexto, duas ações e recompensa binária, que é a assinatura do depósito.”</aside>
+  <aside class="notes">“O problema é escolher, antes da ligação, entre celular e telefone numa campanha de depósito a prazo. A regra fixa usa sempre o mesmo canal para todos. A política adaptativa escolhe pelo contexto do cliente e aprende com os resultados. Formulamos isso como um contextual bandit: um contexto, duas ações e uma recompensa, que vale 1 quando o cliente assina o depósito.”</aside>
 </section>
 
 <!-- 2. Impacto -->
@@ -150,81 +144,79 @@ assinou = 1`"]
   <h2>Impacto para o negócio</h2>
   <div class="grid g3" style="margin-top:10px">
     <div class="card">
-      <h4>Custo do contato</h4>
-      <p>Cada ligação consome tempo de operador e exposição do cliente. A regra fixa ignora o perfil e não aprende.</p>
+      <h4>Custo</h4>
+      <p>Cada ligação consome tempo de operador.</p>
     </div>
     <div class="card">
-      <h4>Ganho hipotético</h4>
-      <div class="stat teal">≈ 2 <small>conversões extras / 1.000 contatos</small></div>
-      <p class="muted" style="font-size:18px;margin-top:8px">Simulação (+0,20 p.p.) com o mesmo custo. Hipótese a validar com teste controlado.</p>
+      <h4>Ganho possível</h4>
+      <div class="stat teal">≈ 2 <small>conversões extras a cada 1.000 contatos</small></div>
+      <p class="muted" style="font-size:18px;margin-top:8px">Na simulação, com o mesmo custo.</p>
     </div>
     <div class="card">
-      <h4>Risco de promover sem validar</h4>
-      <p style="margin:0 0 6px">Teste temporal observado:</p>
-      <p style="margin:0">Celular <strong class="teal">32,2%</strong> · Telefone <strong class="rose">21,0%</strong></p>
-      <p class="muted" style="font-size:18px;margin-top:8px">O modelo prefere telefone. Seguir a política poderia desviar contatos para o canal que converteu menos.</p>
+      <h4>Risco</h4>
+      <p style="margin:0 0 6px">No teste observado:</p>
+      <p style="margin:0">Celular <strong class="teal">32%</strong> · Telefone <strong class="rose">21%</strong></p>
+      <p class="muted" style="font-size:18px;margin-top:8px">O modelo prefere telefone. Promover sem validar poderia piorar a conversão.</p>
     </div>
   </div>
-  <aside class="notes">“Por que isso importa? Cada ligação custa tempo de operador. Com o mesmo custo, escolher o canal pelo contexto pode converter mais: na simulação, cerca de duas conversões a mais a cada mil contatos. Mas há um risco concreto: no teste observado, celular converte 32% e telefone 21%, e o modelo prefere telefone. Promover sem validar poderia piorar a conversão.”</aside>
+  <aside class="notes">“Por que isso importa? Cada ligação consome tempo de operador. Com o mesmo custo, escolher melhor o canal pode converter mais: na simulação, cerca de duas conversões extras a cada mil contatos. Mas há um risco: no teste observado, celular converte 32% e telefone 21%, e o modelo prefere telefone. Promover sem validar poderia piorar a conversão.”</aside>
 </section>
 
 <!-- 3. Dados -->
 <section>
   <span class="time">0:45–1:10</span>
   <span class="kicker">Dados e formulação</span>
-  <h2>Bank Marketing — <code>bank-additional-full.csv</code></h2>
-  <div class="grid g4" style="margin:14px 0 22px">
-    <div class="card"><h4>Origem</h4><div class="stat" style="font-size:30px">UCI · Kaggle</div><p class="muted" style="font-size:17px">Banco português, telemarketing, CC BY 4.0</p></div>
-    <div class="card"><h4>Período</h4><div class="stat" style="font-size:30px">2008–2010</div><p class="muted" style="font-size:17px">Ordem da fonte como proxy temporal</p></div>
-    <div class="card"><h4>Tamanho</h4><div class="stat">41.188</div><p class="muted" style="font-size:17px">registros · 21 colunas</p></div>
-    <div class="card"><h4>Conversão global</h4><div class="stat">11,27%</div><p class="muted" style="font-size:17px">26.144 celular · 15.044 telefone</p></div>
+  <h2>Base Bank Marketing</h2>
+  <div class="grid g3" style="margin:14px 0 22px">
+    <div class="card"><h4>Fonte</h4><div class="stat" style="font-size:34px">UCI · Kaggle</div></div>
+    <div class="card"><h4>Tamanho</h4><div class="stat" style="font-size:34px">41.188 <small>contatos</small></div></div>
+    <div class="card"><h4>Origem</h4><div class="stat" style="font-size:34px">Portugal <small>2008–2010</small></div></div>
   </div>
   <div class="grid g3">
-    <div class="card"><h4 class="teal">Contexto x</h4><p>Perfil, histórico da campanha e indicadores macroeconômicos</p></div>
-    <div class="card"><h4 class="blue">Ação a</h4><p><code>contact</code> ∈ {cellular, telephone}</p></div>
-    <div class="card"><h4 class="amber">Recompensa r</h4><p><code>y = yes</code> → 1 (assinou o depósito)</p></div>
+    <div class="card"><h4 class="teal">Contexto</h4><p>Perfil do cliente, histórico da campanha e indicadores econômicos</p></div>
+    <div class="card"><h4 class="blue">Ação</h4><p>Coluna <code>contact</code>: celular ou telefone</p></div>
+    <div class="card"><h4 class="amber">Recompensa</h4><p>Coluna <code>y</code>: 1 quando o cliente assinou</p></div>
   </div>
-  <p class="footer-note">Dados observacionais: o resultado do canal alternativo nunca foi observado, e a base não traz custo por canal.</p>
-  <aside class="notes">“Usamos a base Bank Marketing, do UCI, também publicada no Kaggle: 41.188 registros de uma campanha portuguesa de 2008 a 2010. O contexto reúne perfil, histórico da campanha e indicadores econômicos. contact é a ação e y é a recompensa. Os dados são observacionais: não sabemos o que o outro canal teria gerado.”</aside>
+  <div class="banner amber" style="margin-top:20px">Dados observacionais: só vemos o resultado do canal que foi usado</div>
+  <aside class="notes">“Usamos a base Bank Marketing, do UCI, também publicada no Kaggle: 41.188 contatos de um banco português, entre 2008 e 2010. O contexto reúne perfil do cliente, histórico da campanha e indicadores econômicos. A coluna contact é a ação, e a coluna y é a recompensa. Os dados são observacionais: só vemos o resultado do canal que foi usado.”</aside>
 </section>
 
 <!-- 4. Integridade -->
 <section>
   <span class="time">1:10–1:35</span>
   <span class="kicker">Integridade da avaliação</span>
-  <h2>Split temporal e zero leakage</h2>
-  <div class="split" style="margin:16px 0 8px">
-    <div style="width:60%;background:rgba(45,212,191,.22);color:var(--teal)">Treino 60%<small>24.705 · ajusta pré-processador e modelo</small></div>
-    <div style="width:20%;background:rgba(96,165,250,.22);color:var(--blue)">Validação 20%<small>8.235</small></div>
-    <div style="width:20%;background:rgba(251,191,36,.2);color:var(--amber)">Teste 20%<small>8.236</small></div>
+  <h2>Avaliar sem trapaça</h2>
+  <div class="split" style="margin:16px 0 22px">
+    <div style="width:60%;background:rgba(45,212,191,.22);color:var(--teal)">Treino 60%<small>mais antigo</small></div>
+    <div style="width:20%;background:rgba(96,165,250,.22);color:var(--blue)">Validação 20%</div>
+    <div style="width:20%;background:rgba(251,191,36,.2);color:var(--amber)">Teste 20%<small>mais recente</small></div>
   </div>
-  <p class="muted" style="font-size:17px;margin:0 0 20px">Ordem cronológica da fonte · 12 duplicatas removidas · 41.176 registros · 57 features</p>
-  <div class="grid g2">
+  <div class="grid g3">
+    <div class="card">
+      <h4 class="teal">Aprendido só no treino</h4>
+      <p>Médias, categorias e escalas vêm do treino e depois são aplicadas à validação e ao teste</p>
+    </div>
     <div class="card">
       <h4 class="rose">Fora do contexto</h4>
-      <ul>
+      <ul style="font-size:21px">
         <li><code>duration</code>: só existe depois da ligação</li>
-        <li><code>contact</code>: é a própria ação</li>
-        <li><code>y</code>: é a recompensa</li>
+        <li><code>contact</code>: é a ação</li>
+        <li><code>y</code>: é o resultado</li>
       </ul>
     </div>
     <div class="card">
-      <h4 class="teal">Tratamentos</h4>
-      <ul>
-        <li><code>pdays=999</code> → indicador “nunca contatado”</li>
-        <li><code>campaign − 1</code> → contatos anteriores</li>
-        <li>One-hot, imputação e escala: <code>fit</code> no treino, <code>transform</code> em validação e teste</li>
-      </ul>
+      <h4 class="blue">Tratamento</h4>
+      <p><code>pdays = 999</code> vira “nunca contatado”, e não uma distância de 999 dias</p>
     </div>
   </div>
-  <aside class="notes">“Para uma avaliação honesta, o split é temporal, 60, 20 e 20. O pré-processador aprende médias, categorias e escalas só com o treino e depois é aplicado à validação e ao teste. Removemos duration, que só existe depois da ligação, e mantemos o canal e o resultado fora do contexto. pdays igual a 999 vira o indicador ‘nunca contatado’.”</aside>
+  <aside class="notes">“Para avaliar sem trapaça, dividimos os dados pela ordem do tempo: 60% para treino, 20% para validação e 20% para teste. Médias, categorias e escalas são aprendidas só no treino e depois aplicadas à validação e ao teste. Tiramos do contexto a duração da ligação, que só existe depois do contato, além do canal e do resultado. E pdays igual a 999 vira ‘nunca contatado’.”</aside>
 </section>
 
 <!-- 5. Política -->
 <section>
   <span class="time">1:35–2:15</span>
   <span class="kicker">Política e resultados · Etapas 3 e 4</span>
-  <h2>Baseline fixo vs. Thompson Sampling contextual</h2>
+  <h2>Baseline fixo vs. Thompson Sampling</h2>
   <div class="grid" style="grid-template-columns:1fr 1.35fr;align-items:start">
     <div>
       <div class="card" style="margin-bottom:14px">
@@ -234,273 +226,201 @@ assinou = 1`"]
       </div>
       <div class="card">
         <h4>Thompson Sampling</h4>
-        <p style="font-size:20px;margin:0">Beta com média do reward model calibrado, prior Beta(1,1), força 40 e guardrails de exposição de 5% a 95%</p>
+        <p style="font-size:21px;margin:0">Para cada cliente, sorteia a partir da conversão estimada de cada canal e explora mais onde há incerteza</p>
       </div>
     </div>
     <div>
       <table class="data">
-        <tr><th>Simulação · 30 seeds</th><th style="text-align:right">Uplift vs baseline</th><th style="text-align:right">IC 95%</th></tr>
-        <tr class="hl"><td><strong>Thompson Sampling</strong></td><td class="num teal">+0,20 p.p.</td><td class="num">+0,18 a +0,23</td></tr>
-        <tr><td>Epsilon-Greedy (comparador)</td><td class="num">+0,39 p.p.</td><td class="num">+0,37 a +0,42</td></tr>
-        <tr><td>Baseline fixo</td><td class="num">0</td><td class="num">—</td></tr>
+        <tr><th>Simulação · 30 repetições</th><th style="text-align:right">Ganho sobre o baseline</th></tr>
+        <tr class="hl"><td><strong>Thompson Sampling</strong></td><td class="num teal">+0,20 p.p.</td></tr>
       </table>
-      <div class="banner amber" style="margin-top:16px">⚠ A simulação gera as respostas com o próprio modelo: o ganho só vale se o modelo estiver certo</div>
+      <div class="banner amber" style="margin-top:14px">⚠ A simulação gera as respostas com o próprio modelo</div>
       <div class="grid g3" style="margin-top:14px;gap:10px">
-        <div class="card" style="padding:12px 14px"><h4>ROC-AUC teste</h4><div class="stat rose" style="font-size:32px">0,41</div><p class="muted" style="font-size:15px;margin:4px 0 0">pior que o acaso (0,5): o modelo erra no teste</p></div>
-        <div class="card" style="padding:12px 14px"><h4>Clipping OPE</h4><div class="stat rose" style="font-size:32px">31%</div><p class="muted" style="font-size:15px;margin:4px 0 0">histórico quase sem o canal escolhido</p></div>
-        <div class="card" style="padding:12px 14px"><h4>Quality gate</h4><div class="stat rose" style="font-size:26px">Bloqueado</div><p class="muted" style="font-size:15px;margin:4px 0 0">exige ROC ≥ 0,5 e clipping &lt; 10%</p></div>
+        <div class="card" style="padding:12px 14px"><h4>Modelo no teste</h4><div class="stat rose" style="font-size:32px">0,41</div><p class="muted" style="font-size:15px;margin:4px 0 0">ROC-AUC, pior que o acaso (0,5)</p></div>
+        <div class="card" style="padding:12px 14px"><h4>Histórico real</h4><div class="stat rose" style="font-size:32px">31%</div><p class="muted" style="font-size:15px;margin:4px 0 0">dos casos sem o canal escolhido</p></div>
+        <div class="card" style="padding:12px 14px"><h4>Quality gate</h4><div class="stat rose" style="font-size:26px">Bloqueado</div><p class="muted" style="font-size:15px;margin:4px 0 0">sem avaliação confiável</p></div>
       </div>
     </div>
   </div>
-  <aside class="notes">“O baseline, calculado no treino, é sempre celular: 5,83% contra 3,95% do telefone. A política principal é Thompson Sampling contextual. Na simulação de 30 seeds, ela supera o baseline em 0,20 ponto percentual. Só que a simulação gera a resposta dos clientes com o próprio modelo, e esse modelo erra no período de teste: ordena quem converte pior que o acaso, com ROC-AUC de 0,41. A outra avaliação, que repondera o histórico real, também não é confiável: em 31% dos casos o canal escolhido quase nunca tinha sido usado naquele contexto. Sem uma avaliação confiável, não afirmamos ganho, e o quality gate bloqueia o deploy.”</aside>
+  <aside class="notes">“O baseline, calculado no treino, é sempre celular: 5,83% contra 3,95% do telefone. A política principal é o Thompson Sampling: para cada cliente, ele sorteia a partir da conversão estimada de cada canal e explora mais onde há incerteza. Na simulação de 30 repetições, supera o baseline em 0,20 ponto percentual. Só que a simulação gera as respostas com o próprio modelo, e esse modelo erra no teste: o ROC-AUC é 0,41, pior que o acaso. A outra avaliação, que repondera o histórico real, também falha: em 31% dos casos o canal escolhido quase nunca tinha sido usado. Sem avaliação confiável, o quality gate bloqueia o deploy.”</aside>
 </section>
 
 <!-- 6. API -->
 <section>
-  <span class="time">2:15–3:05</span>
+  <span class="time">2:15–3:00</span>
   <span class="kicker">Demo ao vivo · Etapa 5</span>
   <h2>API de recomendação</h2>
-  <div class="grid" style="grid-template-columns:0.85fr 1.15fr;align-items:start">
-    <div>
-      <table class="data" style="font-size:19px">
-        <tr><td><code>GET /health</code></td><td class="muted">saúde do serviço</td></tr>
-        <tr><td><code>GET /model-info</code></td><td class="muted">versão e posterior ativo</td></tr>
-        <tr class="hl"><td><code>POST /recommend</code></td><td>canal + propensão</td></tr>
-        <tr><td><code>POST /feedback</code></td><td class="muted">recompensa observada</td></tr>
-      </table>
-      <ul style="margin-top:16px;font-size:21px">
-        <li>Aceita só atributos pré-contato</li>
-        <li><code>Idempotency-Key</code> evita decisão duplicada</li>
-        <li><code>X-Request-ID</code> para correlação</li>
-      </ul>
-    </div>
-<pre class="code"><span class="c"># make api  →  POST /recommend</span>
+  <div class="grid" style="grid-template-columns:0.9fr 1.1fr;align-items:start">
+    <ol class="steps" style="font-size:21px">
+      <li><code>GET /health</code>: o serviço está no ar</li>
+      <li><code>GET /model-info</code>: versão da política em uso</li>
+      <li><code>POST /recommend</code>: envia um cliente, só com dados anteriores à ligação</li>
+      <li>A mesma chamada com a mesma chave devolve a mesma decisão</li>
+      <li><code>POST /feedback</code>: resultado do contato, depois da ligação</li>
+    </ol>
+<pre class="code"><span class="c"># resposta de POST /recommend</span>
 {
-  <span class="k">"request_id"</span>: <span class="s">"demo-request-001"</span>,
   <span class="k">"action"</span>: <span class="s">"telephone"</span>,
   <span class="k">"action_probability"</span>: <span class="n">0.5638</span>,
   <span class="k">"expected_reward_by_action"</span>: {
     <span class="k">"cellular"</span>: <span class="n">0.0630</span>,
     <span class="k">"telephone"</span>: <span class="n">0.0729</span>
   },
-  <span class="k">"policy_version"</span>: <span class="s">"thompson-sampling-contextual-v1"</span>,
-  <span class="k">"reason"</span>: <span class="s">"posterior_sample"</span>,
-  <span class="k">"human_review_required"</span>: <span class="n">true</span>
-}</pre>
+  <span class="k">"policy_version"</span>: <span class="s">"thompson-sampling-contextual-v1"</span>
+}
+<span class="c">action                    canal recomendado</span>
+<span class="c">action_probability        chance de a política escolher esse canal</span>
+<span class="c">expected_reward_by_action conversão estimada por canal</span>
+<span class="c">policy_version            versão que decidiu</span></pre>
   </div>
-  <p class="footer-note">Troque para o terminal e faça a chamada real. Plano B: <code>artifacts/golden_set.json</code>.</p>
-  <aside class="notes">“A API recebe apenas dados disponíveis antes do contato, estima a recompensa por canal e aplica a política com seus guardrails. A resposta traz ação, propensão, versão e identificador. A propensão registrada permite avaliar a política depois, com IPS. A chave idempotente evita duplicar decisões quando a chamada se repete.”
+  <aside class="notes">“Agora, a API ao vivo. Primeiro, health mostra que o serviço está no ar, e model-info, a versão da política em uso. Em seguida, envio um cliente para recommend, só com dados anteriores à ligação. A resposta traz action, o canal recomendado; action_probability, a chance de a política escolher esse canal, que guardamos para avaliar a política depois; expected_reward_by_action, a conversão estimada de cada canal; e policy_version, a versão que decidiu. Repetir a chamada com a mesma chave devolve a mesma decisão. Depois da ligação, o resultado volta por feedback.”
 
-Ao vivo: curl /health, /model-info e POST /recommend (comandos na seção da API). Aponte action, action_probability, expected_reward_by_action, policy_version, reason e human_review_required.</aside>
+Ao vivo: curl /health, /model-info e POST /recommend (comandos na seção da API), apontando os quatro campos na ordem do slide.</aside>
 </section>
 
 <!-- 7. MLflow -->
 <section>
-  <span class="time">3:05–3:25</span>
+  <span class="time">3:00–3:20</span>
   <span class="kicker">Demo ao vivo · Etapa 7</span>
   <h2>MLflow: o registro de cada execução</h2>
-  <p class="muted" style="font-size:20px;margin:-6px 0 14px">Parâmetros usados, métricas obtidas e arquivos gerados, por execução</p>
+  <p class="muted" style="font-size:20px;margin:-6px 0 14px">Parâmetros usados, métricas obtidas e arquivos gerados</p>
   <div class="grid g2" style="margin-top:8px">
     <div class="card">
       <h4 class="teal">Execução de treino</h4>
-      <table class="data" style="font-size:18px">
-        <tr><td><code>best_train_action</code></td><td class="num">cellular</td></tr>
-        <tr><td><code>train_conversion_cellular</code></td><td class="num">0,0583</td></tr>
-        <tr><td><code>thompson_model_strength</code></td><td class="num">40</td></tr>
-        <tr><td><code>test_roc_auc</code></td><td class="num rose">0,41</td></tr>
+      <table class="data" style="font-size:20px">
+        <tr><td>Baseline</td><td class="num">celular</td></tr>
+        <tr><td>Conversão do baseline no treino</td><td class="num">5,83%</td></tr>
+        <tr><td>ROC-AUC do modelo no teste</td><td class="num rose">0,41</td></tr>
       </table>
     </div>
     <div class="card">
       <h4 class="blue">Execução de avaliação</h4>
-      <table class="data" style="font-size:18px">
-        <tr><td><code>simulation_fixed_best_conversion_rate</code></td><td class="num">0,6615</td></tr>
-        <tr><td><code>simulation_thompson_sampling_uplift_absolute</code></td><td class="num teal">0,0020</td></tr>
-        <tr><td><code>ope_thompson_sampling_clip_rate</code></td><td class="num rose">0,31</td></tr>
-        <tr><td><code>gate_deployment_claim</code> <span class="muted">(0 = reprovado)</span></td><td class="num rose">0</td></tr>
+      <table class="data" style="font-size:20px">
+        <tr><td>Ganho de Thompson</td><td class="num teal">+0,20 p.p.</td></tr>
+        <tr><td>Quality gate</td><td class="num rose">0 = reprovado</td></tr>
       </table>
     </div>
   </div>
-  <div class="banner teal" style="margin-top:16px">Cada execução guarda a versão do código (<code>git_sha</code>) e a assinatura dos dados (<code>data_sha256</code>): dá para repetir exatamente o mesmo resultado.</div>
-  <p class="footer-note"><code>make mlflow-ui</code> → http://127.0.0.1:5000. A conversão simulada é alta porque segue as previsões do reward model no período de teste.</p>
-  <aside class="notes">“O MLflow é a ferramenta que registra cada execução do projeto: os parâmetros usados, as métricas obtidas e os arquivos gerados. No treino, ele guarda o baseline: celular, com 5,83%. Na avaliação, guarda o ganho de Thompson e o resultado do quality gate: zero, ou seja, reprovado. Cada execução também guarda a versão do código e uma assinatura dos dados, para poder ser repetida depois.”
+  <div class="banner teal" style="margin-top:16px">Cada execução guarda a versão do código e uma assinatura dos dados, para ser repetida</div>
+  <aside class="notes">“O MLflow registra cada execução: parâmetros, métricas e arquivos. Na execução de treino, está o baseline, celular com 5,83%, e o ROC-AUC de 0,41. Na de avaliação, o ganho de Thompson, 0,20 ponto, e o quality gate: zero, reprovado. Cada execução guarda a versão do código e uma assinatura dos dados, para ser repetida.”
 
-Ao vivo: mostre na MLflow UI os dois experimentos e, na avaliação, a métrica gate_deployment_claim = 0.</aside>
+Ao vivo: na MLflow UI, abra as duas execuções e mostre best_train_action, train_conversion_cellular, test_roc_auc, simulation_thompson_sampling_uplift_absolute e gate_deployment_claim.</aside>
 </section>
 
 <!-- 8. Caso de uso 1 -->
 <section>
-  <span class="time">3:25–3:45</span>
+  <span class="time">3:20–3:45</span>
   <span class="kicker">Caso de uso 1 · Etapa 6</span>
-  <h2>Entrega e infraestrutura</h2>
+  <h2>Entrega</h2>
   <div class="diagram h-uc" data-diagram="uc1"></div>
-  <div class="grid g3 facts">
-    <div class="card"><h4 class="teal">Testes a cada mudança</h4>O GitHub Actions confere o código, roda os testes e empacota a aplicação</div>
-    <div class="card"><h4 class="amber">Gate antes da nuvem</h4>Só um modelo aprovado no quality gate chega ao Google Cloud; hoje ele para aqui</div>
-    <div class="card"><h4 class="blue">Troca segura</h4>Acesso com credencial temporária, sem senha salva; versão nova recebe 10% dos acessos e volta se falhar</div>
-  </div>
-  <div class="legend"><span class="solid">implementado e verificado localmente</span><span class="dashed">declarado, ainda não executado em GCP</span><span class="future">futuro</span></div>
+  <div class="legend"><span class="solid">funcionando localmente</span><span class="dashed">configurado, ainda não executado no Google Cloud</span></div>
   <script type="text/plain" class="mermaid-src" id="uc1">flowchart LR
-    DEV[Desenvolvedor] -->|push ou PR| CI["`GitHub Actions
-ci.yml`"]
-    CI --> CHECKS["`Ruff · pytest · Docker
-Terraform validate · smoke MLflow`"]
-    DEV -->|manual em main| DEP["`GitHub Actions
-deploy.yml`"]
-    DEP --> GATE{Quality gate}
-    GATE -.->|aprovado| WIF["`OIDC + Workload
-Identity Federation`"]
-    WIF -.-> TF[Terraform]
-    WIF -.->|imagem por digest| AR[(Artifact Registry)]
-    TF -.->|declara| RES["`Cloud Run API e Job · Firestore
-Pub/Sub · BigQuery · Cloud Storage
-Scheduler · alertas`"]
-    AR -.-> CANARY["`Revisão sem tráfego
-canário 10% · rollback`"]
+    MUD[Mudança no código] --> GHA["`GitHub Actions
+testes e empacotamento`"]
+    GHA --> GATE{Quality gate}
+    GATE -->|reprovado hoje| STOP[Para aqui]
+    GATE -.->|aprovado| TF["`Terraform cria a infraestrutura
+credencial temporária, sem senha salva`"]
+    TF -.-> CAN["`Versão nova recebe
+10% dos acessos`"]
+    CAN -.->|erro| BACK[Volta à versão anterior]
+    CAN -.->|sem erro| FULL["`Versão nova com
+100% dos acessos`"]
 </script>
-  <aside class="notes">“A entrega é automatizada no GitHub Actions, que executa tarefas sempre que o código muda. A cada mudança, ele roda os testes e empacota a aplicação. Para ir à nuvem, o modelo precisa passar no quality gate. O acesso ao Google Cloud usa credenciais temporárias, sem senha guardada no repositório. E a versão nova recebe só 10% dos acessos primeiro; se falhar, a anterior volta.”</aside>
+  <aside class="notes">“A entrega começa com uma mudança no código. O GitHub Actions, que executa tarefas automáticas no repositório, roda os testes e empacota a aplicação. Depois vem o quality gate: hoje o modelo é reprovado e para aqui. Se aprovado, o Terraform cria a infraestrutura no Google Cloud com uma credencial temporária, sem senha salva. A versão nova recebe só 10% dos acessos; se der erro, volta a anterior; se não, recebe todos.”</aside>
 </section>
 
 <!-- 9. Caso de uso 2 -->
 <section>
   <span class="time">3:45–4:00</span>
   <span class="kicker">Caso de uso 2 · Etapas 1 a 4 e 7</span>
-  <h2>Ingestão, treino e registro de modelos</h2>
+  <h2>Caminho do modelo</h2>
   <div class="diagram h-uc" data-diagram="uc2"></div>
-  <div class="grid g3 facts">
-    <div class="card"><h4 class="teal">Reprodutível</h4>Dados conferidos por assinatura, divididos por período e avaliados em 30 repetições</div>
-    <div class="card"><h4 class="blue">Registrado</h4>Tudo fica no MLflow: parâmetros, métricas, arquivos, código e dados usados</div>
-    <div class="card"><h4 class="amber">Só aprovado segue</h4>Guardar na nuvem e registrar no catálogo do Vertex AI exigem gate aprovado</div>
-  </div>
-  <div class="legend"><span class="solid">implementado e verificado localmente</span><span class="dashed">declarado, ainda não executado em GCP</span><span class="future">futuro</span></div>
+  <div class="legend"><span class="solid">funcionando localmente</span><span class="dashed">configurado, ainda não executado no Google Cloud</span></div>
   <script type="text/plain" class="mermaid-src" id="uc2">flowchart LR
-    UCI[UCI Bank Marketing] --> ING["`Ingestão e validação
-contrato e SHA-256`"]
-    ING --> PREP["`Split temporal
-sem leakage`"]
-    PREP --> TRAIN["`Treino e avaliação
-30 seeds`"]
-    TRAIN --> MLF[("`MLflow
-runs · métricas · linhagem`")]
+    UCI[Dados UCI] --> CONF["`Conferência
+assinatura dos dados`"]
+    CONF --> DIV[Divisão por período]
+    DIV --> TRAIN[Treino e avaliação]
+    TRAIN --> MLF[(MLflow)]
     TRAIN --> GATE{Quality gate}
-    GATE -->|bloqueado hoje| STOP[Sem promoção]
-    GATE -.->|aprovado| GCS[("`Cloud Storage
-raw · models · evaluations por SHA`")]
-    GATE -.->|aprovado| MR["`Vertex AI Model Registry
-make register-model`"]
-    VP[Vertex AI Pipelines]:::future -.-> TRAIN
-    classDef future fill:#0f1626,stroke:#64748b,stroke-dasharray:5 4,color:#93a3bd
+    GATE -->|reprovado hoje| STOP[Para aqui]
+    GATE -.->|aprovado| GCS[("`Modelo guardado
+no Cloud Storage`")]
+    GATE -.->|aprovado| MR["`Catálogo de modelos
+Vertex AI`"]
 </script>
-  <aside class="notes">“Este é o caminho do modelo. Os dados são conferidos, divididos por período, usados no treino e na avaliação, e tudo fica registrado no MLflow. Só um modelo aprovado no gate é guardado na nuvem e entra no catálogo de modelos do Google, o Vertex AI. Hoje ele é reprovado, então para aqui.”</aside>
+  <aside class="notes">“Este é o caminho do modelo: os dados do UCI são conferidos pela assinatura, divididos por período, treinados e avaliados, e tudo vai para o MLflow. Só se passar no quality gate o modelo é guardado no Cloud Storage e entra no catálogo de modelos do Vertex AI. Hoje ele para no gate.”</aside>
 </section>
 
 <!-- 10. Caso de uso 3 -->
 <section>
-  <span class="time">4:00–4:20</span>
-  <span class="kicker">Caso de uso 3 · Etapa 5 em produção</span>
-  <h2>Recomendação e coleta de feedback</h2>
+  <span class="time">4:00–4:25</span>
+  <span class="kicker">Caso de uso 3 · API em produção</span>
+  <h2>Recomendação e resultado do contato</h2>
   <div class="diagram h-uc" data-diagram="uc3"></div>
-  <div class="grid g3 facts">
-    <div class="card"><h4 class="teal">Cada decisão salva</h4>Canal, probabilidade e versão ficam no Firestore, o banco de dados</div>
-    <div class="card"><h4 class="blue">Resultado sem duplicar</h4>Salvo uma vez por recomendação e enviado pela fila Pub/Sub ao BigQuery</div>
-    <div class="card"><h4 class="amber">Atualiza sozinha</h4>A API adota a versão aprovada da política em até 30 s, sem reinstalar</div>
-  </div>
-  <div class="legend"><span class="solid">implementado e verificado localmente</span><span class="dashed">declarado, ainda não executado em GCP</span><span class="future">futuro</span></div>
+  <div class="legend"><span class="solid">funcionando localmente</span><span class="dashed">configurado, ainda não executado no Google Cloud</span></div>
   <script type="text/plain" class="mermaid-src" id="uc3">flowchart LR
-    CLIENT["`Sistema da campanha
-autenticado`"] -->|POST /recommend| CR[Cloud Run API]
-    CR -->|ação · propensão · versão| CLIENT
-    MODEL[("`Cloud Storage
-reward model por SHA`")] -.->|modelo| CR
-    ACTIVE[("`Cloud Storage
-current.json aprovado`")] -.->|posterior ativo| CR
-    CR -->|decisão e segmento| FS[("`Firestore
-decisões e feedback`")]
-    OP[Resultado do contato] -->|POST /feedback| CR
-    CR -.->|publica evento| PS[Pub/Sub]
-    PS -.->|"`push autenticado
-/events/feedback`"| CR
-    PS -.->|falhas repetidas| DLQ[Dead-letter topic]
-    CR -.->|evento idempotente| BQ[("`BigQuery
+    SIS[Sistema da campanha] -->|pede recomendação| API[API no Cloud Run]
+    API -->|canal recomendado| SIS
+    GCS[("`Cloud Storage
+modelo e política aprovada`")] -.->|carrega| API
+    RES[Resultado do contato] -->|feedback| API
+    API -->|grava decisão e resultado| FS[("`Firestore
+banco de dados`")]
+    API -.->|envia evento| PS[Fila Pub/Sub]
+    PS -.->|entrega| BQ[("`BigQuery
 análise`")]
+    PS -.->|falhas repetidas| DLQ[Fila de erros]
 </script>
-  <aside class="notes">“Aqui está a API em produção. Ela roda no Cloud Run, serviço do Google que executa a aplicação sob demanda. Cada recomendação é gravada no Firestore, um banco de dados. Depois do contato, o resultado volta pela API, é salvo e segue por uma fila de mensagens, o Pub/Sub, até o BigQuery, onde é analisado.”</aside>
+  <aside class="notes">“Em produção, o sistema da campanha pede a recomendação à API, que roda no Cloud Run, serviço do Google que executa a aplicação sob demanda. A API carrega do Cloud Storage o modelo e a política aprovada. Cada decisão e cada resultado de contato são gravados no Firestore, um banco de dados. O resultado também segue por uma fila de mensagens, o Pub/Sub, até o BigQuery, para análise; o que falha vai para uma fila de erros.”</aside>
 </section>
 
 <!-- 11. Caso de uso 4 -->
 <section>
-  <span class="time">4:20–4:45</span>
+  <span class="time">4:25–4:50</span>
   <span class="kicker">Caso de uso 4 · Ciclo semanal</span>
-  <h2>Atualização semanal e monitoramento</h2>
+  <h2>Aprendizado semanal</h2>
   <div class="diagram h-uc" data-diagram="uc4"></div>
-  <div class="grid g3 facts">
-    <div class="card"><h4 class="teal">Gatilho ajustável</h4>Semanal hoje; pode passar a rodar por volume de dados ou mudança de comportamento</div>
-    <div class="card"><h4 class="amber">Nova versão não entra sozinha</h4>Só é ativada após o quality gate e a aprovação de uma pessoa</div>
-    <div class="card"><h4 class="rose">Alertas</h4>A equipe é avisada se a API der erro ou se o processo semanal falhar</div>
-  </div>
-  <div class="legend"><span class="solid">implementado e verificado localmente</span><span class="dashed">declarado, ainda não executado em GCP</span><span class="future">futuro</span></div>
+  <div class="legend"><span class="solid">funcionando localmente</span><span class="dashed">configurado, ainda não executado no Google Cloud</span></div>
   <script type="text/plain" class="mermaid-src" id="uc4">flowchart LR
-    SCH["`Cloud Scheduler
-segunda 09:00 · ajustável`"] -.->|dispara| JOB["`Cloud Run Job
-consolidate_policy.py`"]
+    AG["`Agendador
+toda segunda · ajustável`"] -.->|dispara| JOB["`Processo semanal
+soma resultados novos`"]
     FS[("`Firestore
-feedback novo`")] -.-> JOB
-    CFG["`policy_update.json
-interval · volume · drift`"] --> JOB
-    JOB -->|amostra insuficiente| SKIP[Recibo skipped]
-    JOB -->|candidato pending_review| CAND[("`policy_versions
-versão candidata`")]
-    REV["`Revisor humano
-GitHub Environment`"] --> APPROVE["`policy-approval.yml
-quality gate + integridade`"]
-    CAND --> APPROVE
-    APPROVE -->|aprovado| ACTIVE[(current.json)]
-    ACTIVE -->|posterior ativo| CR[Cloud Run API]
-    CR -.->|5xx| MON["`Cloud Monitoring
-alertas`"]
-    JOB -.->|execução falhou| MON
-    BQ[(BigQuery)] -.-> DASH["`Dashboard de drift
-e conversão`"]:::future
-    classDef future fill:#0f1626,stroke:#64748b,stroke-dasharray:5 4,color:#93a3bd
+resultados`")] -.-> JOB
+    JOB -->|poucos dados| PULA[Registra que pulou]
+    JOB -->|dados suficientes| NOVA[("`Nova versão
+aguardando revisão`")]
+    NOVA --> GATE{Quality gate +<br/>aprovação de uma pessoa}
+    GATE -->|aprovada| ATIVA[(Versão ativa)]
+    ATIVA -->|passa a usar| API[API]
+    JOB -.->|falhou| ALERTA[Alerta para a equipe]
+    API -.->|erros| ALERTA
 </script>
-  <aside class="notes">“Este é o aprendizado semanal. Toda segunda-feira, um agendador dispara um processo que soma os resultados novos: quantos contatos e quantas conversões por canal e por perfil de cliente. Com dados suficientes, ele gera uma nova versão da política, mas não a ativa. Ela só entra em uso depois do quality gate e da aprovação de uma pessoa. Se algo falhar, um alerta avisa a equipe.”</aside>
+  <aside class="notes">“No aprendizado semanal, toda segunda-feira, num intervalo ajustável, um agendador dispara um processo que soma os resultados novos do Firestore. Com poucos dados, ele só registra que pulou. Com dados suficientes, gera uma nova versão da política, que fica aguardando revisão. Ela só vira a versão ativa após o quality gate e a aprovação de uma pessoa; aí a API passa a usá-la. Se o processo ou a API falharem, um alerta avisa a equipe.”</aside>
 </section>
 
 <!-- 12. Conclusão -->
 <section>
-  <span class="time">4:45–5:00</span>
+  <span class="time">4:50–5:00</span>
   <span class="kicker">Conclusão</span>
-  <h2>O que está feito, o que não está provado e o próximo passo</h2>
-  <div class="grid g3" style="margin-top:12px">
+  <h2>Em resumo</h2>
+  <div class="grid g3" style="margin-top:16px">
     <div class="card">
-      <h4 class="teal">Demonstrado</h4>
-      <ul class="check ok" style="font-size:20px">
-        <li>Preparação temporal sem leakage</li>
-        <li>Baseline fixo, Thompson e Epsilon-Greedy</li>
-        <li>API com propensão e versão por decisão</li>
-        <li>MLflow, feedback e ciclo semanal</li>
-        <li>Quality gate funcionando</li>
-      </ul>
+      <h4 class="teal">Funciona</h4>
+      <p style="font-size:24px">O fluxo completo: dados, modelo, API e aprendizado semanal</p>
     </div>
     <div class="card">
       <h4 class="rose">Não provado</h4>
-      <ul class="check no" style="font-size:20px">
-        <li>Efeito causal do canal</li>
-        <li>Ganho real em clientes atuais</li>
-        <li>Generalização temporal do reward model</li>
-        <li>Infraestrutura GCP em execução</li>
-      </ul>
+      <p style="font-size:24px">Que um canal converte mais que o outro</p>
     </div>
     <div class="card">
       <h4 class="amber">Próximo passo</h4>
-      <ul class="check next" style="font-size:20px">
-        <li>Dados representativos e consentidos</li>
-        <li>Teste controlado com critério de parada</li>
-        <li>Provisionar GCP e ensaiar o rollout</li>
-      </ul>
+      <p style="font-size:24px">Teste controlado, com dados atuais</p>
     </div>
   </div>
-  <div class="banner teal" style="margin-top:20px">A plataforma conecta dados, avaliação, política, serving e governança, e deixa a evidência contrária visível.</div>
-  <aside class="notes">“Em resumo: o fluxo completo funciona, dos dados à API e ao aprendizado semanal. Mas a evidência ainda não prova que um canal converte mais. O próximo passo é um teste controlado, com dados atuais.”</aside>
+  <aside class="notes">“Em resumo: o fluxo completo funciona: dados, modelo, API e aprendizado semanal. Não está provado que um canal converte mais. O próximo passo é um teste controlado, com dados atuais.”</aside>
 </section>
 
 <!-- Apêndice -->
@@ -508,10 +428,10 @@ e conversão`"]:::future
   <span class="kicker">Apêndice · Perguntas</span>
   <h2>Perguntas prováveis</h2>
   <div class="grid g2" style="font-size:20px">
-    <div class="card"><h4>A política provou que telefone converte mais?</h4><p>Não. O uplift é semissintético; no teste observado o celular fica à frente; o OPE tem 31% de clipping; o gate bloqueia.</p></div>
-    <div class="card"><h4>Por que não o modelo de maior ROC-AUC?</h4><p>O ROC temporal está abaixo de 0,5. Escolher pela simulação gerada pelo próprio modelo seria circular.</p></div>
-    <div class="card"><h4>A arquitetura GCP está funcionando?</h4><p>Está declarada em Terraform e validada estaticamente; nenhum recurso foi aplicado ainda.</p></div>
-    <div class="card"><h4>O que falta para produção?</h4><p>Evidência representativa, revisão IAM, provisionamento, ensaio do Scheduler e do canário, monitoramento agregado e teste de carga.</p></div>
+    <div class="card"><h4>A política provou que telefone converte mais?</h4><p>Não. O ganho vem da simulação; no teste observado o celular fica à frente; a reponderação do histórico não tem cobertura; o gate bloqueia.</p></div>
+    <div class="card"><h4>E o Epsilon-Greedy?</h4><p>Comparador: +0,39 p.p. na mesma simulação, com as mesmas ressalvas. Thompson é a política principal por tratar a incerteza explicitamente.</p></div>
+    <div class="card"><h4>A arquitetura GCP está funcionando?</h4><p>Está declarada em Terraform e validada; nenhum recurso foi criado no Google Cloud ainda.</p></div>
+    <div class="card"><h4>O que falta para produção?</h4><p>Dados representativos, revisão de permissões, criação dos recursos, ensaio do agendador e da troca de versão, e teste de carga.</p></div>
   </div>
 </section>
 
